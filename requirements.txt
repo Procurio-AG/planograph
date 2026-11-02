@@ -1,0 +1,20 @@
+# ==============================================================================
+# PlangoGraph Local CPU Stack
+# ==============================================================================
+# Lean, deterministic CPU environment for local development, testing, API server,
+# and Streamlit visual auditing. Contains ZERO NVIDIA/CUDA runtime bloat.
+#
+# For GPU-intensive tasks (YOLOv8 training on SKU-110K, DINOv2 feature extraction),
+# offload to Google Colab using the Colab CLI (`requirements-gpu.txt`).
+# ==============================================================================
+
+opencv-python-headless>=4.8.0
+numpy>=1.24.0
+networkx>=3.2
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+streamlit>=1.30.0
+pytest>=7.4.0
+onnxruntime>=1.17.0

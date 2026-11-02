@@ -1,0 +1,18 @@
+# Python & Virtual Environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Code Review Graph & IDE
+.code-review-graph/
+.pytest_cache/
+
+# Streamlit & Cache
+.streamlit/
+
+# OS / Temporary
+.DS_Store
+*.tmp

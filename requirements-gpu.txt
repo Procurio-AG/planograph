@@ -1,0 +1,21 @@
+# ==============================================================================
+# PlangoGraph Google Colab GPU Stack
+# ==============================================================================
+# GPU dependencies for training YOLOv8m on SKU-110K or running DINOv2 / FAISS
+# metric-learning experiments on Colab VMs (L4 / T4 / A100).
+#
+# Provision and install via Colab CLI:
+#   colab new -s plangograph-gpu --gpu L4
+#   colab install -s plangograph-gpu -r requirements-gpu.txt
+# ==============================================================================
+
+ultralytics>=8.2.0
+torch>=2.1.0
+torchvision>=0.16.0
+faiss-gpu>=1.7.4
+opencv-python-headless>=4.8.0
+networkx>=3.2
+numpy>=1.24.0
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pydantic>=2.5.0
