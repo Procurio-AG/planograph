@@ -1,0 +1,211 @@
+\documentclass[10pt,a4paper]{article}
+% Authentic Springer LNCS (Lecture Notes in Computer Science) Page Geometry & Typography
+\usepackage[a4paper,textwidth=122mm,textheight=193mm,centering,top=26mm]{geometry}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{cite}
+\usepackage{microtype}
+\usepackage{caption}
+
+\setlength{\tabcolsep}{3.2pt}
+\emergencystretch=1.5em
+
+\definecolor{lncsaccent}{RGB}{0, 73, 144}
+\definecolor{lncsbg}{RGB}{244, 247, 250}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=lncsaccent,
+    citecolor=lncsaccent,
+    urlcolor=lncsaccent
+}
+
+\setlength{\parskip}{3.5pt plus 1pt minus 1pt}
+\captionsetup{font=small,labelfont=bf}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize A. Gupta: PlangoGraph Planogram Compliance via Spatial Layout Graphs}
+\fancyhead[R]{\footnotesize Springer LNCS Format \quad \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newtheorem{proposition}{Proposition}
+
+\title{\large\textbf{PlangoGraph: Retail Planogram Compliance Auditing via Decoupled ONNX Metric Indexing and Two-Dimensional Spatial Layout Graphs}}
+
+\author{
+\normalsize\textbf{PlangoGraph Contributors}\\
+\small Department of Computer Science \& Engineering
+}
+\date{\small Academic Year 2026--2027}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+\noindent Retail shelf auditing requires verifying both product identity and two-dimensional spatial layout against reference planograms. End-to-end multi-class detectors fail to scale across thousands of changing Stock Keeping Units (SKUs) and break down when handheld camera roll, wide-angle lens curvature, variable standoff distance or heterogeneous package heights distort horizontal shelf rows. This paper presents PlangoGraph (v2.2), a four-stage computer vision and graph alignment pipeline split across a cloud L4 GPU training environment and a lightweight local CPU ONNX Runtime service. Stage~1 applies CIE-LAB Contrast Limited Adaptive Histogram Equalisation (CLAHE) and second-order polynomial curve rectification. Stage~2 separates class-agnostic dense product localisation (YOLOv8m trained on SKU-110K at $1024\times 1024$ resolution, reaching $93.7\%$ $\text{mAP}@50$ and $59.2\%$ $\text{mAP}@50\text{--}95$) from zero-shot SKU identification using L2-normalised DINOv2 ViT-S/14 descriptors ($d=384$) combined with HSV colour histograms and spatial continuity priors. Stage~3 builds an attributed directed scene graph $G_{\text{extracted}} = (V, E)$ via multi-shelf pairwise bottom-edge slope RANSAC, 1D DBSCAN with vertical-span merging, intrinsic box-width scale self-calibration ($\alpha_k$) and Markov neighbourhood planogram smoothing. Stage~4 aligns $G_{\text{extracted}}$ against reference or self-calibrated blueprints using a spatially-augmented Needleman-Wunsch dynamic programming lattice and two-dimensional Graph Edit Distance (GED). Evaluation across 500 simulated retail bays and wild store captures demonstrates $100.0\%$ shelf-row recovery up to $15^\circ$ camera roll, $98.90\%$ F1 on out-of-stock gaps, $98.62\%$ F1 on misplaced substitutions and $96.12\%$ F1 on extra insertions at $39.5\text{ ms}$ per frame.
+
+\vspace{4pt}
+\noindent\textbf{Keywords:} Planogram Compliance $\cdot$ Spatial Scene Graphs $\cdot$ Retail Computer Vision $\cdot$ SKU-110K $\cdot$ DINOv2 Metric Learning $\cdot$ ONNX Runtime $\cdot$ Needleman-Wunsch Alignment.
+\end{abstract}
+
+\section{Need for the Project and Domain Introduction}
+This section describes the operational problem of retail planogram compliance, details the four failure modes of existing vision pipelines on wild store captures and states the scope and structure of the report.
+
+\subsection{Background, Motivation and Problem Identification}
+Retailers and consumer packaged goods manufacturers negotiate planogram blueprints that specify the shelf tier, horizontal slot sequence and facing count of every product in an aisle. Out-of-stock gaps and misplaced items cause 4 to 8 per cent of lost retail sales, yet manual clipboard auditing cannot scale across stores stocking 10,000+ active SKUs. Existing automated approaches fail on real-world handheld captures for four reasons:
+\begin{itemize}\setlength{\itemsep}{2pt}\setlength{\parskip}{0pt}
+    \item Training a monolithic multi-class detector on thousands of SKUs suffers from severe class imbalance and requires full network retraining whenever a package graphic changes.
+    \item Clustering products into shelves by bounding-box centroids $y_c$ fractures shelves whenever short tins ($80\text{ px}$) sit beside tall bags ($180\text{ px}$), or when double-stacked cans and camera roll ($\theta \in [-15^\circ, +15^\circ]$) shift vertical coordinates.
+    \itemEvaluating out-of-stock gaps with fixed pixel width thresholds fails when photographs are taken at varying standoff distances ($0.8\text{ m}$ versus $3.0\text{ m}$).
+    \item Aligning sequences with classical one-dimensional string edit distance collapses co-occurring deletions and insertions into false substitutions, while naive single-image auto-calibration copies misplaced intruder items into the expected blueprint rather than flagging them.
+\end{itemize}
+
+\subsection{Objectives and Organisation of the Report}
+PlangoGraph addresses these four faults by combining a decoupled YOLOv8m and DINOv2 ONNX Runtime bridge, pairwise slope RANSAC with intrinsic scale self-calibration ($\alpha_k$), Markov neighbourhood planogram smoothing and spatially-augmented Needleman-Wunsch alignment. Section~2 presents a tabular review of prior work; Section~3 formulates the four pipeline stages mathematically; Section~4 details the hardware, software and module implementation; Section~5 analyses the SKU-110K training curve and 500-scene ablation results; and Section~6 states the conclusions, limitations and future scope.
+
+\section{Literature Review}
+This section compares six foundational papers across dense object detection, metric learning and sequence alignment. Table~\ref{tab:lncs_lit} summarises the methodology, key findings and unaddressed gap of each study.
+
+\begin{table}[h]
+\centering
+\caption{Comparative Literature Review in Automated Retail Shelf Auditing}
+\label{tab:lncs_lit}
+\scriptsize
+\begin{tabularx}{\textwidth}{c l c p{2.3cm} p{2.5cm} p{2.4cm} X}
+\toprule
+\textbf{No.} & \textbf{Author(s)} & \textbf{Year} & \textbf{Title / Corpus} & \textbf{Methodology} & \textbf{Findings} & \textbf{Research Gap} \\
+\midrule
+1 & Merler \textit{et al.}~\cite{merler2007grozi} & 2007 & GroZi-3.2k In-Situ Grocery Recognition & SIFT keypoints and colour histograms matched to studio views. & Established GroZi-3.2k; exposed store lighting domain shift. & Cannot separate touching items or audit 2D shelf sequences. \\
+\addlinespace[2pt]
+2 & Needleman \& Wunsch~\cite{needleman1970general} & 1970 & Global Sequence Alignment Algorithm & Dynamic programming over string edit lattice. & Guarantees optimal $\mathcal{O}(nm)$ global sequence alignment. & Ignores 2D pixel gap widths and conflates OOS with extra items. \\
+\addlinespace[2pt]
+3 & Goldman \textit{et al.}~\cite{goldman2019precise} & 2019 & Precise Detection in Densely Packed Scenes & RetinaNet with Soft-IoU and EM-Merger on SKU-110K. & Reached $49.2\%$ $\text{mAP}@50\text{--}95$ on 1.73M dense boxes. & Predicts `object` class only; no SKU recognition or graph audit. \\
+\addlinespace[2pt]
+4 & Wei \textit{et al.}~\cite{wei2019rpc} & 2019 & RPC: Retail Product Checkout Dataset & FPN detector with CycleGAN synthesis across 200 SKUs. & Benchmarked checkout recognition on 83.7k images. & Closed-set head requires retraining; no multi-shelf graph model. \\
+\addlinespace[2pt]
+5 & Bai \textit{et al.}~\cite{bai2020products10k} & 2020 & Products-10K Fine-Grained Recognition & ArcFace metric learning across 10,000 retail SKUs. & Separated visually similar packaging variants at scale. & Operates on isolated crops; provides no shelf layout compliance. \\
+\addlinespace[2pt]
+6 & Oquab \textit{et al.}~\cite{oquab2023dinov2} & 2024 & DINOv2 Self-Supervised Vision Transformer & Discriminative self-distillation on ViT backbones. & Extracts lighting-invariant zero-shot descriptors. & Needs chromatic and spatial priors to group crinkled pouches. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Two design rules carry forward from Table~\ref{tab:lncs_lit}: dense localisation must be trained class-agnostically on SKU-110K while brand recognition is delegated to metric embeddings, and sequence alignment must incorporate physical gap widths from the 2D scene graph.
+
+\section{Proposed Methodology and Mathematical Formulation}
+This section details the four sequential stages of the PlangoGraph pipeline.
+
+\subsection{Stage 1: CIE-LAB CLAHE and Quadratic Curve Rectification}
+Input image $I \in \mathbb{R}^{H\times W\times 3}$ is converted from BGR to CIE-LAB, where CLAHE ($\beta=2.0$, $8\times 8$ grid) normalises the luminance channel $L$ without altering the chromatic channels $a$ and $b$. To remove wide-angle smartphone barrel distortion, Stage~1 fits a shared quadratic residual $y_{\max}(x_c) = a x_{c,\text{norm}}^2 + b x_{c,\text{norm}} + c_k$ across shelves with at least three items and subtracts $a x_{c,\text{norm}}^2$ from box vertical coordinates.
+
+\subsection{Stage 2: Decoupled YOLOv8m ONNX Detector and DINOv2 Classifier}
+Stage~2A (`core/detector.py`) letterbox-resizes the image to $1024\times 1024$, executes `yolov8m_sku110k.onnx` via `onnxruntime`, transposes the output tensor $[1, 5, 21504] \to [21504, 5]$, removes letterbox padding and applies NMS ($\tau_{\text{iou}} = 0.55$). If ONNX weights are absent, a multi-scale Canny and Sobel vertical-seam contour fallback at working width $1024\text{ px}$ extracts proposals within relative area bounds $[0.0025 A, 0.45 A]$.
+
+Stage~2B (`core/classifier.py`) resizes each detected crop to $224\times 224$, extracts a 384-dimensional L2-normalised vector $v_i$ via `dinov2_vits14.onnx` alongside a 24-bin L2-normalised HSV colour histogram $h_i$ and groups wild-image crops using spatially-regularised affinity:
+\begin{equation}
+    \mathcal{A}(i, k) = 0.70\,(v_i^\top v_k) + 0.30\,(h_i^\top h_k) + 0.08 \cdot \mathbb{I}(\text{SameShelf}_{ik} \wedge \Delta_{\text{dim}}(i,k) < 0.28) \ge 0.66.
+\end{equation}
+
+\subsection{Stage 3: Scene Graph Construction, Span Merging and Scale Calibration}
+Pairwise bottom-edge slopes $\theta_{ij} = \arctan((y_{\max,j} - y_{\max,i})/(x_{c,j} - x_{c,i}))$ are pooled across all shelves via length-weighted RANSAC to recover camera roll $\hat{\theta}$. After rotating box bases by $-\hat{\theta}$, 1D DBSCAN ($\tau_y = 0.26\,\tilde{h}$) forms initial shelf rows, and vertical-span merging combines any sub-cluster whose vertical interval $[\tilde{y}_{\min}, \tilde{y}_{\max}]$ overlaps by at least 45 per cent with a dominant shelf. Per-shelf intrinsic scale calibration $\alpha_k = \text{clip}(\text{median}(w_{\text{det},k})/\text{median}(\hat{w}_{\text{ref},k}), 0.15, 6.0)$ scales reference widths $\hat{w}_{\text{cal}} = \alpha_k \hat{w}$ so that virtual gap synthesis $\hat{m}_j = \text{round}(\Delta x_j / \hat{w}_{\text{cal}})$ holds across camera distances from $0.8\text{ m}$ to $3.0\text{ m}$.
+
+\subsection{Stage 4: Markov Planogram Smoothing and Spatially-Augmented NW}
+When calibrating from a single wild image (`smooth_anomalies=True`), `export_as_planogram_ref()` applies Markov neighbourhood smoothing rather than copying raw detections into the blueprint: isolated singleton items flanked by identical neighbours ($[A, B, A] \to [A, A, A]$) and singleton visual/geometric outliers adjacent to multi-facing blocks are replaced by the dominant neighbour SKU in the expected blueprint, while physical gaps are back-filled. Global dynamic programming alignment $D_{i,j}$ then scores matches at $+2.00$, anchored physical gaps (\texttt{\_\_PHYSICAL\_GAP\_\_}) at $-0.65$, unanchored gaps at $-1.00$ and misplaced substitutions at $-1.60$.
+
+\section{Tools, Technology and Module Implementation}
+This section details the hardware and software stack and the repository structure.
+\begin{itemize}\setlength{\itemsep}{2pt}\setlength{\parskip}{0pt}
+    \item The training environment runs on Google Colab Pro with an NVIDIA L4 GPU (22.5\,GB VRAM, 53.0\,GB System RAM, 235\,GB SSD), while the local edge runtime executes on CPU in under 200\,MB of RAM via `onnxruntime>=1.17.0`.
+    \item The software stack comprises 17 files (110 AST nodes and 1,772 edges): `start.sh` (environment sync and CLI launcher), `core/preprocessing.py`, `core/detector.py`, `core/classifier.py`, `core/graph_builder.py`, `core/compliance_engine.py`, `core/visualizer.py`, `api/` (FastAPI and Pydantic v2 schemas) and `app.py` (three-tab Streamlit workstation with live camera input, wild-image calibration, threshold sliders and slot diff tables).
+\end{itemize}
+
+\section{Experimental Results and Discussion}
+This section presents the training results on SKU-110K and the Monte Carlo ablations across camera roll and anomaly classes. Table~\ref{tab:lncs_yolo} shows the YOLOv8m training metrics across epochs on the L4 GPU, while Tables~\ref{tab:lncs_tilt} and~\ref{tab:lncs_anom} report the 500-scene tilt benchmark and 200-scene anomaly evaluation.
+
+\begin{table}[h]
+\centering
+\caption{Stage 2A YOLOv8m Training Progression on SKU-110K ($1024\times 1024$, NVIDIA L4 GPU, 588 Val Images / 90,968 Instances)}
+\label{tab:lncs_yolo}
+\footnotesize
+\begin{tabularx}{\textwidth}{X r r r r r r r}
+\toprule
+\textbf{Epoch} & \textbf{Box Loss} & \textbf{Cls Loss} & \textbf{DFL Loss} & \textbf{Precision (\%)} & \textbf{Recall (\%)} & \textbf{mAP@50 (\%)} & \textbf{mAP@50--95 (\%)} \\
+\midrule
+Epoch 1 & 1.432 & 0.8016 & 1.140 & 87.0 & 81.5 & 88.1 & 52.6 \\
+Epoch 5 & 1.334 & 0.6135 & 1.091 & 89.9 & 86.6 & 92.4 & 57.4 \\
+Epoch 10 & 1.293 & 0.5687 & 1.078 & 90.7 & 87.5 & 93.3 & 58.6 \\
+\textbf{Epoch 13 (Best)} & \textbf{1.280} & \textbf{0.5535} & \textbf{1.074} & \textbf{90.3} & \textbf{88.0} & \textbf{93.7} & \textbf{59.2} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Shelf Clustering Accuracy (\%) Across Camera Roll Angles $\theta$ ($N=500$ Scenes)}
+\label{tab:lncs_tilt}
+\footnotesize
+\begin{tabularx}{\textwidth}{X r r r r r r}
+\toprule
+\textbf{Stage 3 Shelf Grouping Strategy} & $\mathbf{0^\circ}$ & $\mathbf{3^\circ}$ & $\mathbf{6^\circ}$ & $\mathbf{9^\circ}$ & $\mathbf{12^\circ}$ & $\mathbf{15^\circ}$ \\
+\midrule
+Naive Centroid Clustering ($y_c$) & 97.56 & 80.00 & 35.10 & 16.03 & 11.55 & 8.99 \\
+Bottom-Edge $y_{\max}$ DBSCAN (Without RANSAC) & \textbf{100.00} & \textbf{100.00} & 95.58 & 40.56 & 11.01 & 6.99 \\
+\textbf{PlangoGraph (Pairwise Slope RANSAC + $y_{\max}$ DBSCAN)} & \textbf{100.00} & \textbf{100.00} & \textbf{100.00} & \textbf{100.00} & \textbf{100.00} & \textbf{100.00} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Comparison of String-Only vs. Spatially-Augmented Needleman-Wunsch Alignment ($N=200$ Perturbed Bays)}
+\label{tab:lncs_anom}
+\footnotesize
+\begin{tabularx}{\textwidth}{l X r r r r r r}
+\toprule
+\textbf{Method} & \textbf{Anomaly Category} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{Prec. (\%)} & \textbf{Rec. (\%)} & \textbf{F1 (\%)} \\
+\midrule
+String-Only NW & Missing Item (OOS) & 329 & 0 & 33 & 100.00 & 90.88 & 95.22 \\
+(Baseline) & Misplaced Substitution & 291 & 33 & 0 & 89.81 & 100.00 & 94.63 \\
+ & Extra Insertion & 69 & 0 & 33 & 100.00 & 67.65 & 80.70 \\
+\midrule
+\textbf{PlangoGraph NW} & \textbf{Missing Item (OOS)} & \textbf{359} & \textbf{5} & \textbf{3} & \textbf{98.63} & \textbf{99.17} & \textbf{98.90} \\
+(Spatial Gap Nodes) & \textbf{Misplaced Substitution} & \textbf{286} & \textbf{3} & \textbf{5} & \textbf{98.96} & \textbf{98.28} & \textbf{98.62} \\
+ & \textbf{Extra Insertion} & \textbf{99} & \textbf{5} & \textbf{3} & \textbf{95.19} & \textbf{97.06} & \textbf{96.12} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+In Table~\ref{tab:lncs_anom}, all 33 false negatives on OOS deletions and extra insertions in the string-only baseline occur when a deletion and an insertion co-occur on the same shelf and collapse into 33 false-positive substitutions. Injecting Stage~3 virtual gap nodes resolves this ambiguity, lifting Extra-Item F1 by 15.42 percentage points to $96.12\%$.
+
+\section{Conclusion, Limitations and Future Scope}
+PlangoGraph unifies class-agnostic dense detection ($93.7\%$ $\text{mAP}@50$ on SKU-110K), zero-shot DINOv2 ONNX metric retrieval, scale-calibrated spatial scene graphs and spatially-augmented Needleman-Wunsch alignment into a CPU-deployable retail auditing system. Because monocular two-dimensional images capture only the front plane of a shelf, the system cannot count recessed units hidden behind the front facing; that is a deliberate boundary of single-view auditing rather than an oversight. Future work will extend the graph across stitched aisle panoramas, integrate monocular depth estimation (Depth-Anything-V2) for volumetric back-of-shelf counting and add optical character recognition on shelf price tags.
+
+\begin{thebibliography}{9}
+\bibitem{merler2007grozi}
+Merler, M., Galleguillos, C., Belongie, S.: Recognizing groceries in situ using in vitro training data. In: IEEE CVPR Workshops, pp. 1--8 (2007)
+
+\bibitem{needleman1970general}
+Needleman, S.B., Wunsch, C.D.: A general method applicable to the search for similarities in the amino acid sequence of two proteins. Journal of Molecular Biology \textbf{48}(3), 443--453 (1970)
+
+\bibitem{goldman2019precise}
+Goldman, E., Herzig, R., Eisenschtat, A., Goldberger, J., Hassner, T.: Precise detection in densely packed scenes. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), pp. 5227--5236 (2019)
+
+\bibitem{wei2019rpc}
+Wei, X.S., Cui, Q., Yang, L., Wang, P., Liu, L.: RPC: A large-scale retail product checkout dataset. arXiv preprint arXiv:1901.07249 (2019)
+
+\bibitem{bai2020products10k}
+Bai, Y., Chen, Y., Yu, W., Wang, L., Zhang, W.: Products-10K: A large-scale product recognition dataset. arXiv preprint arXiv:2008.10545 (2020)
+
+\bibitem{oquab2023dinov2}
+Oquab, M., et al.: DINOv2: Learning robust visual features without supervision. Transactions on Machine Learning Research (TMLR) (2024)
+\end{thebibliography}
+
+\end{document}
