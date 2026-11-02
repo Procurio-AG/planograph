@@ -1,0 +1,79 @@
+{
+  "planogram_id": "PLG_SAKHI_AISLE_04",
+  "bay_number": 1,
+  "total_shelves": 3,
+  "shelves": [
+    {
+      "shelf_index": 0,
+      "shelf_name": "Top Shelf",
+      "expected_sequence": [
+        {
+          "slot": 1,
+          "sku_id": "SKU_001",
+          "name": "Organic Honey 250g",
+          "facings": 2,
+          "expected_width_px": 110.0
+        },
+        {
+          "slot": 2,
+          "sku_id": "SKU_002",
+          "name": "Assam Tea 500g",
+          "facings": 3,
+          "expected_width_px": 110.0
+        }
+      ]
+    },
+    {
+      "shelf_index": 1,
+      "shelf_name": "Middle Shelf",
+      "expected_sequence": [
+        {
+          "slot": 1,
+          "sku_id": "SKU_003",
+          "name": "Turmeric Powder 200g",
+          "facings": 2,
+          "expected_width_px": 110.0
+        },
+        {
+          "slot": 2,
+          "sku_id": "SKU_005",
+          "name": "Mango Pickle 400g",
+          "facings": 3,
+          "expected_width_px": 110.0
+        }
+      ]
+    },
+    {
+      "shelf_index": 2,
+      "shelf_name": "Bottom Shelf",
+      "expected_sequence": [
+        {
+          "slot": 1,
+          "sku_id": "SKU_006",
+          "name": "Basmati Rice 1kg",
+          "facings": 3,
+          "expected_width_px": 145.0
+        },
+        {
+          "slot": 2,
+          "sku_id": "SKU_007",
+          "name": "Cold Pressed Mustard Oil 1L",
+          "facings": 2,
+          "expected_width_px": 115.0
+        }
+      ]
+    }
+  ],
+  "vertical_rules": [
+    {
+      "upper_sku": "SKU_001",
+      "lower_sku": "SKU_003",
+      "rule_type": "ABOVE"
+    },
+    {
+      "upper_sku": "SKU_002",
+      "lower_sku": "SKU_005",
+      "rule_type": "ABOVE"
+    }
+  ]
+}

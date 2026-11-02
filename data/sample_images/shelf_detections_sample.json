@@ -1,0 +1,170 @@
+[
+  {
+    "bbox": [
+      65.0,
+      95.0,
+      175.0,
+      265.0
+    ],
+    "confidence": 0.96,
+    "class_label": "product",
+    "sku_id": "SKU_001",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      195.0,
+      95.0,
+      305.0,
+      265.0
+    ],
+    "confidence": 0.95,
+    "class_label": "product",
+    "sku_id": "SKU_001",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      325.0,
+      95.0,
+      435.0,
+      265.0
+    ],
+    "confidence": 0.94,
+    "class_label": "product",
+    "sku_id": "SKU_002",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      585.0,
+      95.0,
+      695.0,
+      265.0
+    ],
+    "confidence": 0.93,
+    "class_label": "product",
+    "sku_id": "SKU_002",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      65.0,
+      325.0,
+      175.0,
+      495.0
+    ],
+    "confidence": 0.95,
+    "class_label": "product",
+    "sku_id": "SKU_003",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      195.0,
+      325.0,
+      305.0,
+      495.0
+    ],
+    "confidence": 0.89,
+    "class_label": "product",
+    "sku_id": "SKU_999",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      325.0,
+      325.0,
+      435.0,
+      495.0
+    ],
+    "confidence": 0.94,
+    "class_label": "product",
+    "sku_id": "SKU_005",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      455.0,
+      325.0,
+      565.0,
+      495.0
+    ],
+    "confidence": 0.95,
+    "class_label": "product",
+    "sku_id": "SKU_005",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      585.0,
+      325.0,
+      695.0,
+      495.0
+    ],
+    "confidence": 0.92,
+    "class_label": "product",
+    "sku_id": "SKU_005",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      65.0,
+      550.0,
+      210.0,
+      725.0
+    ],
+    "confidence": 0.97,
+    "class_label": "product",
+    "sku_id": "SKU_006",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      230.0,
+      550.0,
+      375.0,
+      725.0
+    ],
+    "confidence": 0.96,
+    "class_label": "product",
+    "sku_id": "SKU_006",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      395.0,
+      550.0,
+      540.0,
+      725.0
+    ],
+    "confidence": 0.95,
+    "class_label": "product",
+    "sku_id": "SKU_006",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      560.0,
+      550.0,
+      675.0,
+      725.0
+    ],
+    "confidence": 0.94,
+    "class_label": "product",
+    "sku_id": "SKU_007",
+    "sku_similarity": null
+  },
+  {
+    "bbox": [
+      695.0,
+      550.0,
+      810.0,
+      725.0
+    ],
+    "confidence": 0.93,
+    "class_label": "product",
+    "sku_id": "SKU_007",
+    "sku_similarity": null
+  }
+]
