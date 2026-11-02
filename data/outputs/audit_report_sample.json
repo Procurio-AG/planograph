@@ -1,0 +1,153 @@
+{
+  "audit_id": "AUD_982341",
+  "timestamp": "2026-10-23T10:26:09Z",
+  "planogram_id": "PLG_SAKHI_AISLE_04",
+  "overall_compliance_score": 86.67,
+  "estimated_tilt_deg": 0.0,
+  "summary": {
+    "total_expected_facings": 15,
+    "total_detected_facings": 14,
+    "compliant_count": 13,
+    "missing_count": 1,
+    "misplaced_count": 1,
+    "extra_count": 0,
+    "graph_edit_distance": 2.0,
+    "vertical_rule_compliance": 100.0
+  },
+  "shelf_reports": [
+    {
+      "shelf_index": 0,
+      "shelf_name": "Top Shelf",
+      "compliance_score": 80.0,
+      "needleman_wunsch_score": 7.35,
+      "expected_flattened": [
+        "SKU_001",
+        "SKU_001",
+        "SKU_002",
+        "SKU_002",
+        "SKU_002"
+      ],
+      "detected_sequence": [
+        "SKU_001",
+        "SKU_001",
+        "SKU_002",
+        "SKU_002"
+      ],
+      "aligned_expected": [
+        "SKU_001",
+        "SKU_001",
+        "SKU_002",
+        "SKU_002",
+        "SKU_002"
+      ],
+      "aligned_detected": [
+        "SKU_001",
+        "SKU_001",
+        "SKU_002",
+        "-",
+        "SKU_002"
+      ],
+      "anomalies": [
+        {
+          "type": "MISSING_ITEM",
+          "expected_sku": "SKU_002",
+          "detected_sku": null,
+          "position_index": 3,
+          "estimated_gap_bbox": [
+            435,
+            95,
+            585,
+            265
+          ],
+          "detected_bbox": null,
+          "details": "Expected SKU_002 at aligned slot 3 is missing (OOS)."
+        }
+      ]
+    },
+    {
+      "shelf_index": 1,
+      "shelf_name": "Middle Shelf",
+      "compliance_score": 80.0,
+      "needleman_wunsch_score": 6.4,
+      "expected_flattened": [
+        "SKU_003",
+        "SKU_003",
+        "SKU_005",
+        "SKU_005",
+        "SKU_005"
+      ],
+      "detected_sequence": [
+        "SKU_003",
+        "SKU_999",
+        "SKU_005",
+        "SKU_005",
+        "SKU_005"
+      ],
+      "aligned_expected": [
+        "SKU_003",
+        "SKU_003",
+        "SKU_005",
+        "SKU_005",
+        "SKU_005"
+      ],
+      "aligned_detected": [
+        "SKU_003",
+        "SKU_999",
+        "SKU_005",
+        "SKU_005",
+        "SKU_005"
+      ],
+      "anomalies": [
+        {
+          "type": "MISPLACED_ITEM",
+          "expected_sku": "SKU_003",
+          "detected_sku": "SKU_999",
+          "position_index": 1,
+          "estimated_gap_bbox": null,
+          "detected_bbox": [
+            195,
+            325,
+            305,
+            495
+          ],
+          "details": "Expected SKU_003 but found SKU_999 at slot 1."
+        }
+      ]
+    },
+    {
+      "shelf_index": 2,
+      "shelf_name": "Bottom Shelf",
+      "compliance_score": 100.0,
+      "needleman_wunsch_score": 10.0,
+      "expected_flattened": [
+        "SKU_006",
+        "SKU_006",
+        "SKU_006",
+        "SKU_007",
+        "SKU_007"
+      ],
+      "detected_sequence": [
+        "SKU_006",
+        "SKU_006",
+        "SKU_006",
+        "SKU_007",
+        "SKU_007"
+      ],
+      "aligned_expected": [
+        "SKU_006",
+        "SKU_006",
+        "SKU_006",
+        "SKU_007",
+        "SKU_007"
+      ],
+      "aligned_detected": [
+        "SKU_006",
+        "SKU_006",
+        "SKU_006",
+        "SKU_007",
+        "SKU_007"
+      ],
+      "anomalies": []
+    }
+  ]
+}
